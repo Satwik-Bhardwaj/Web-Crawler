@@ -22,26 +22,21 @@ public class DataFeeder {
         }
     }
 
-    private void insertValue(String tableName, String[] values){
-        try {
-            StringBuilder completeVal = new StringBuilder("");
-            for(String value : values){
-                completeVal.append(value).append(", ");
-            }
-            completeVal.deleteCharAt(completeVal.length()-2);
-
-            String v = completeVal.toString();
-
-            Statement statement = connection.createStatement();
-
-            String query = "insert into "+tableName+" values("+v+")";
-
-            statement.executeUpdate(query);
-            System.out.println("Query successfully fired.");
-        } catch (SQLException e) {
-            System.out.println("Query failed to executed.");
-            e.printStackTrace();
+    private void insertValue(String tableName, String[] values) throws SQLException {
+        StringBuilder completeVal = new StringBuilder("");
+        for(String value : values){
+            completeVal.append(value).append(", ");
         }
+        completeVal.deleteCharAt(completeVal.length()-2);
+
+        String v = completeVal.toString();
+
+        Statement statement = connection.createStatement();
+
+        String query = "insert into "+tableName+" values ("+v+")";
+        System.out.println(query);
+        statement.executeUpdate(query);
+        System.out.println("Query successfully fired.");
     }
 
     private ResultSet selectValue(String tableName, int id){
@@ -49,7 +44,7 @@ public class DataFeeder {
         ResultSet resultSet = null;
         try {
             statement = connection.createStatement();
-            String query = "SELECT * FROM "+ tableName + " WHERE id="+id;
+            String query = "SELECT * FROM "+ tableName + " WHERE UrlId="+id;
             System.out.println(query);
             resultSet = statement.executeQuery(query);
 //            System.out.println(resultSet.getString(0));
@@ -67,7 +62,7 @@ public class DataFeeder {
 
         try {
             Statement statement = connection.createStatement();
-            String query = "UPDATE visitingpages SET title = \'" + title + "\', isVisited = " + isVisited + ", firstVisitingTime = \'" + formatter.format(date) + "\', lastVisitingTime = \'" + formatter.format(date) + "\' WHERE id=" + id;
+            String query = "UPDATE urlqueue SET title = \'" + title + "\', isVisited = " + isVisited + ", firstVisitingTime = \'" + formatter.format(date) + "\', lastVisitingTime = \'" + formatter.format(date) + "\' WHERE id=" + id;
             System.out.println(query);
             statement.executeUpdate(query);
         } catch (SQLException e) {
@@ -78,18 +73,32 @@ public class DataFeeder {
     int start = -1;
     int end = -1;
 
-    public void push(int id, String url, String title, int isVisited){
+    public boolean push(int id, String url){
 
-        insertValue("visitingpages", new String[]{
-                String.valueOf(id),
-                "\'"+url+"\'",
-                "\'"+title+"\'",
-                String.valueOf(isVisited),
-                "\'NA\'",
-                "\'NA\'"
-        });
+        try {
+            insertValue("urlqueue", new String[]{
+                    String.valueOf(id),
+                    "\'"+url+"\'"
+            });
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
         end++;
+        return true;
     }
+//    public void push(int id, String url, String title, int isVisited){
+//
+//        insertValue("visitingpages", new String[]{
+//                String.valueOf(id),
+//                "\'"+url+"\'",
+//                "\'"+title+"\'",
+//                String.valueOf(isVisited),
+//                "\'NA\'",
+//                "\'NA\'"
+//        });
+//        end++;
+//    }
 
     public void update(String title, int isVisited){
         updateCurrent(start, title, isVisited);
@@ -101,10 +110,10 @@ public class DataFeeder {
     public String pop(){
         if (!isEmpty()){
             try {
-                ResultSet tempRS = selectValue("visitingpages", start);
+                ResultSet tempRS = selectValue("urlqueue", start);
                 String popItem = null;
                 while (tempRS.next()){
-                     popItem = tempRS.getString("URL");
+                     popItem = tempRS.getString("UrlFetched");
                 }
                 return popItem;
             } catch (SQLException e) {

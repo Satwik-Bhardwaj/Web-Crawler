@@ -19,7 +19,7 @@ public class Main {
         String rootURL = "https://www.w3schools.com";
         String title = "W3School";
 
-        dataFeeder.push(rootID, rootURL, title, -1);
+        dataFeeder.push(rootID, rootURL);
         dataFeeder.start++;
 //        System.out.println("URL: " + rootURL);
 
@@ -37,14 +37,15 @@ public class Main {
                 System.out.println(dataFeeder.end);
                 System.out.println(tempID);
                 doc = Jsoup.connect(urltemp).get();
-                title = doc.title();
-                dataFeeder.update(title, 1);
+//                title = doc.title();
+//                dataFeeder.update(title, 1);
 
                 ele = doc.getElementsByTag("a");
 
                 for (Element element : ele) {
-                    dataFeeder.push(tempID, element.absUrl("href"), element.text(), -1);
-                    tempID++;
+                    if(dataFeeder.push(tempID, element.absUrl("href"))){
+                        tempID++;
+                    }
                 }
                 counter++;
                 System.out.println(dataFeeder.start);
